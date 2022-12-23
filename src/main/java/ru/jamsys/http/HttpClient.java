@@ -91,7 +91,7 @@ public class HttpClient {
         if (fileViewKeyStore != null) {
             sslSocketFactory = fileViewKeyStore.getSslSocketFactory(SslContextType);
         }
-        if (sslSocketFactory == null) {
+        if (sslSocketFactory == null) { //Если хранилище из файла не загрузилось, то может вернуть null
             sslSocketFactory = SslSocketFactoryCache.getSslSocketFactory(SslContextType);
         }
         httpsURLConnection.setSSLSocketFactory(sslSocketFactory);
