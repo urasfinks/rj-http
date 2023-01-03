@@ -35,6 +35,7 @@ public class HttpClient {
         headersRequest.put(name, value);
     }
 
+    @SuppressWarnings("unused")
     public void exec() {
         try {
             URL url = new URL(this.url);
@@ -113,18 +114,22 @@ public class HttpClient {
         return out.toByteArray();
     }
 
+    @SuppressWarnings("unused")
     public void setBasicAuth(String user, String pass, String charset) {
         setRequestHeader("Authorization", "Basic " + UtilBase64.base64Encode(user + ":" + pass, charset, false));
     }
 
+    @SuppressWarnings("unused")
     public String getResponseString(String charset) throws UnsupportedEncodingException {
         return new String(response, charset);
     }
 
+    @SuppressWarnings("unused")
     public void setProxy(Proxy.Type type, String hostname, int port) {
         setProxy(new Proxy(type, new InetSocketAddress(hostname, port)));
     }
 
+    @SuppressWarnings("unused")
     public void setProxy(String hostname, int port) {
         setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port)));
     }

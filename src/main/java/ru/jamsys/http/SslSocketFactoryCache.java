@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SslSocketFactoryCache {
 
-    private static Map<String, SSLSocketFactory> sslSocketFactory = new ConcurrentHashMap<>();
+    private static final Map<String, SSLSocketFactory> sslSocketFactory = new ConcurrentHashMap<>();
 
     public static SSLSocketFactory getSslSocketFactory(String sslContextType) {
         if (!sslSocketFactory.containsKey(sslContextType)) {

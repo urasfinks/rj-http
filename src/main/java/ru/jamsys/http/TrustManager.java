@@ -7,7 +7,7 @@ import java.security.cert.X509Certificate;
 
 public class TrustManager {
 
-    private static X509TrustManager trustManager = new X509TrustManager() {
+    private static final X509TrustManager trustManager = new X509TrustManager() {
         public void checkServerTrusted(X509Certificate[] chain, String authType) {
         }
 
@@ -20,9 +20,9 @@ public class TrustManager {
     };
 
     @Getter
-    private static X509TrustManager[] listTrustManager = {trustManager};
+    private static final X509TrustManager[] listTrustManager = {trustManager};
 
     @Getter
-    private static HostnameVerifier hostnameVerifier = (hostname, session) -> true;
+    private static final HostnameVerifier hostnameVerifier = (hostname, session) -> true;
 
 }
