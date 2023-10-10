@@ -1,6 +1,7 @@
 package ru.jamsys.http;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import ru.jamsys.UtilBase64;
 import ru.jamsys.virtual.file.system.view.FileViewKeyStore;
 
@@ -12,23 +13,58 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Data
 public class HttpClient {
 
-    private final String SslContextType = "TLS";
+    @Getter
+    @Setter
+    private String SslContextType = "TLS";
+
+    @Getter
+    @Setter
     private Proxy proxy = null;
+
+    @Getter
+    @Setter
     private int connectTimeoutMillis = 10000;
+
+    @Getter
+    @Setter
     private int readTimeoutMillis = 10000;
+
+    @Getter
+    @Setter
     public boolean checkServerTrusted = false;
+
+    @Getter
+    @Setter
     public boolean disableHostnameVerification = false;
+
+    @Getter
+    @Setter
     public String method = null;
     private final Map<String, String> headersRequest = new HashMap<>();
+
+    @Getter
     private Map<String, List<String>> headerResponse = null;
-    private FileViewKeyStore fileViewKeyStore = null;
+
+    @Setter
+    private FileViewKeyStore keyStore = null;
+
+    @Getter
+    @Setter
     private byte[] postData = null;
+
+    @Getter
+    @Setter
     private String url = null;
+
+    @Getter
     private byte[] response = null;
+
+    @Getter
     private int status = -1;
+
+    @Getter
     private Exception exception = null;
 
     public void setRequestHeader(String name, String value) {
@@ -89,8 +125,8 @@ public class HttpClient {
 
     private void configureSsl(HttpsURLConnection httpsURLConnection) {
         SSLSocketFactory sslSocketFactory = null;
-        if (fileViewKeyStore != null) {
-            sslSocketFactory = fileViewKeyStore.getSslSocketFactory(SslContextType);
+        if (keyStore != null) {
+            sslSocketFactory = keyStore.getSslSocketFactory(SslContextType);
         }
         if (sslSocketFactory == null) { //Если хранилище из файла не загрузилось, то может вернуть null
             sslSocketFactory = SslSocketFactoryCache.getSslSocketFactory(SslContextType);
