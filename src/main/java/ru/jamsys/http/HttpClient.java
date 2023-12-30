@@ -1,173 +1,108 @@
 package ru.jamsys.http;
 
-import lombok.Getter;
-import lombok.Setter;
+
 import ru.jamsys.UtilBase64;
 import ru.jamsys.virtual.file.system.view.FileViewKeyStore;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
-import java.net.*;
-import java.util.HashMap;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.List;
 import java.util.Map;
 
-public class HttpClient {
-
-    @Getter
-    @Setter
-    private String SslContextType = "TLS";
-
-    @Getter
-    @Setter
-    private Proxy proxy = null;
-
-    @Getter
-    @Setter
-    private int connectTimeoutMillis = 10000;
-
-    @Getter
-    @Setter
-    private int readTimeoutMillis = 10000;
-
-    @Getter
-    @Setter
-    public boolean checkServerTrusted = false;
-
-    @Getter
-    @Setter
-    public boolean disableHostnameVerification = false;
-
-    @Getter
-    @Setter
-    public String method = null;
-    private final Map<String, String> headersRequest = new HashMap<>();
-
-    @Getter
-    private Map<String, List<String>> headerResponse = null;
-
-    @Setter
-    private FileViewKeyStore keyStore = null;
-
-    @Getter
-    @Setter
-    private byte[] postData = null;
-
-    @Getter
-    @Setter
-    private String url = null;
-
-    @Getter
-    private byte[] response = null;
-
-    @Getter
-    private int status = -1;
-
-    @Getter
-    private Exception exception = null;
-
-    public void setRequestHeader(String name, String value) {
-        headersRequest.put(name, value);
-    }
+public interface HttpClient {
 
     @SuppressWarnings("unused")
-    public void exec() {
-        try {
-            URL url = new URL(this.url);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) (proxy == null ? url.openConnection() : url.openConnection(proxy));
-
-            if (httpURLConnection instanceof HttpsURLConnection) {
-                configureSsl((HttpsURLConnection) httpURLConnection);
-            }
-
-            httpURLConnection.setDoOutput(true);
-            httpURLConnection.setConnectTimeout(connectTimeoutMillis);
-            httpURLConnection.setReadTimeout(readTimeoutMillis);
-            httpURLConnection.setUseCaches(false);
-
-            for (Map.Entry<String, String> x : headersRequest.entrySet()) {
-                httpURLConnection.setRequestProperty(x.getKey(), x.getValue());
-            }
-            if (method == null) {
-                method = postData != null ? "POST" : "GET";
-            }
-            httpURLConnection.setRequestMethod(method);
-            if (postData != null) {
-                httpURLConnection.setDoOutput(true);
-            }
-
-            httpURLConnection.connect();
-            if (postData != null) {
-                OutputStream out = httpURLConnection.getOutputStream();
-                out.write(postData);
-                out.flush();
-                out.close();
-            }
-            InputStream inputStream = getResult(httpURLConnection);
-            status = httpURLConnection.getResponseCode();
-            response = read(inputStream);
-            inputStream.close();
-        } catch (Exception e) {
-            exception = e;
-            e.printStackTrace();
-        }
-    }
-
-    private InputStream getResult(HttpURLConnection httpURLConnection) {
-        try {
-            this.headerResponse = httpURLConnection.getHeaderFields();
-            return httpURLConnection.getInputStream();
-        } catch (Exception e) {
-            return httpURLConnection.getErrorStream();
-        }
-    }
-
-    private void configureSsl(HttpsURLConnection httpsURLConnection) {
-        SSLSocketFactory sslSocketFactory = null;
-        if (keyStore != null) {
-            sslSocketFactory = keyStore.getSslSocketFactory(SslContextType);
-        }
-        if (sslSocketFactory == null) { //Если хранилище из файла не загрузилось, то может вернуть null
-            sslSocketFactory = SslSocketFactoryCache.getSslSocketFactory(SslContextType);
-        }
-        httpsURLConnection.setSSLSocketFactory(sslSocketFactory);
-        if (disableHostnameVerification || !checkServerTrusted) {
-            httpsURLConnection.setHostnameVerifier(TrustManager.getHostnameVerifier());
-        }
-    }
-
-    private static byte[] read(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        while (true) {
-            int data = inputStream.read(buf);
-            if (data <= 0) {
-                break;
-            }
-            out.write(buf, 0, data);
-        }
-        return out.toByteArray();
-    }
+    void setSslContextType(String sslContextType);
 
     @SuppressWarnings("unused")
-    public void setBasicAuth(String user, String pass, String charset) {
-        setRequestHeader("Authorization", "Basic " + UtilBase64.base64Encode(user + ":" + pass, charset, false));
-    }
+    String getSslContextType();
 
     @SuppressWarnings("unused")
-    public String getResponseString(String charset) throws UnsupportedEncodingException {
-        return new String(response, charset);
-    }
+    void setProxy(Proxy proxy);
 
     @SuppressWarnings("unused")
-    public void setProxy(Proxy.Type type, String hostname, int port) {
+    Proxy getProxy();
+
+    @SuppressWarnings("unused")
+    int getConnectTimeoutMillis();
+
+    @SuppressWarnings("unused")
+    void setConnectTimeoutMillis(int connectTimeoutMillis);
+
+    @SuppressWarnings("unused")
+    int getReadTimeoutMillis();
+
+    @SuppressWarnings("unused")
+    void setReadTimeoutMillis(int readTimeoutMillis);
+
+    @SuppressWarnings("unused")
+    boolean isCheckServerTrusted();
+
+    @SuppressWarnings("unused")
+    void setCheckServerTrusted(boolean checkServerTrusted);
+
+    @SuppressWarnings("unused")
+    boolean isDisableHostnameVerification();
+
+    @SuppressWarnings("unused")
+    void setDisableHostnameVerification(boolean disableHostnameVerification);
+
+    @SuppressWarnings("unused")
+    String getMethod();
+
+    @SuppressWarnings("unused")
+    void setMethod(String method);
+
+    @SuppressWarnings("unused")
+    Map<String, List<String>> getHeaderResponse();
+
+    @SuppressWarnings("unused")
+    void setKeyStore(FileViewKeyStore keyStore);
+
+    @SuppressWarnings("unused")
+    byte[] getPostData();
+
+    @SuppressWarnings("unused")
+    void setPostData(byte[] postData);
+
+    @SuppressWarnings("unused")
+    void setUrl(String url);
+
+    @SuppressWarnings("unused")
+    String getUrl();
+
+    @SuppressWarnings("unused")
+    byte[] getResponse();
+
+    @SuppressWarnings("unused")
+    int getStatus();
+
+    @SuppressWarnings("unused")
+    Exception getException();
+
+    @SuppressWarnings("unused")
+    void setRequestHeader(String name, String value);
+
+    @SuppressWarnings("unused")
+    void exec();
+
+    @SuppressWarnings("unused")
+    String getResponseString(String charset) throws UnsupportedEncodingException;
+
+    @SuppressWarnings("unused")
+    default void setProxy(Proxy.Type type, String hostname, int port) {
         setProxy(new Proxy(type, new InetSocketAddress(hostname, port)));
     }
 
     @SuppressWarnings("unused")
-    public void setProxy(String hostname, int port) {
+    default void setProxy(String hostname, int port) {
         setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port)));
+    }
+
+    @SuppressWarnings("unused")
+    default void setBasicAuth(String user, String pass, String charset) {
+        setRequestHeader("Authorization", "Basic " + UtilBase64.base64Encode(user + ":" + pass, charset, false));
     }
 
 }

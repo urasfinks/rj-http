@@ -9,8 +9,5 @@
         <module name="rj-http" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="rj-http" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>
