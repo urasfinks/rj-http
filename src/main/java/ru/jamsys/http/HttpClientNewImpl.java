@@ -3,13 +3,15 @@ package ru.jamsys.http;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import ru.jamsys.virtual.file.system.view.FileViewKeyStore;
+import lombok.ToString;
+import ru.jamsys.virtual.file.system.view.FileViewKeyStoreSslContext;
 
 import java.io.*;
 import java.net.Proxy;
-import java.net.URL;
+import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -35,10 +37,6 @@ public class HttpClientNewImpl implements HttpClient {
 
     @Getter
     @Setter
-    public boolean checkServerTrusted = false;
-
-    @Getter
-    @Setter
     public boolean disableHostnameVerification = false;
 
     @Getter
@@ -49,11 +47,11 @@ public class HttpClientNewImpl implements HttpClient {
     @Getter
     private Map<String, List<String>> headerResponse = null;
 
-    @Setter
-    private FileViewKeyStore keyStore = null;
+    private FileViewKeyStoreSslContext sslContext = null;
 
     @Getter
     @Setter
+    @ToString.Exclude
     private byte[] postData = null;
 
     @Getter
@@ -61,6 +59,7 @@ public class HttpClientNewImpl implements HttpClient {
     private String url = null;
 
     @Getter
+    @ToString.Exclude
     private byte[] response = null;
 
     @Getter
@@ -78,12 +77,12 @@ public class HttpClientNewImpl implements HttpClient {
     public void exec() {
         try {
             java.net.http.HttpClient.Builder clientBuilder = java.net.http.HttpClient.newBuilder();
-            if (keyStore != null) {
-                clientBuilder.sslContext(keyStore.getSslContext(SslContextType));
+            if (sslContext != null) {
+                clientBuilder.sslContext(sslContext.getSslContext(SslContextType));
             }
 
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
-            requestBuilder.uri(new URL(this.url).toURI());
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                    .uri(new URI(this.url));
             for (Map.Entry<String, String> x : headersRequest.entrySet()) {
                 requestBuilder.setHeader(x.getKey(), x.getValue());
             }
@@ -118,13 +117,25 @@ public class HttpClientNewImpl implements HttpClient {
     }
 
     @Override
-    public void setBasicAuth(String user, String pass, String charset) {
-
+    public String getResponseString(String charset) throws UnsupportedEncodingException {
+        return new String(response, charset);
     }
 
     @Override
-    public String getResponseString(String charset) throws UnsupportedEncodingException {
-        return new String(response, charset);
+    public void setKeyStore(ru.jamsys.virtual.file.system.File keyStore, Object... props) throws Exception {
+        sslContext = keyStore.getView(FileViewKeyStoreSslContext.class, props);
+    }
+
+    @SuppressWarnings("unused")
+    @ToString.Include()
+    public String getResponseString() {
+        return response != null ? new String(response, StandardCharsets.UTF_8) : "null";
+    }
+
+    @SuppressWarnings("unused")
+    @ToString.Include()
+    public String getPostDataString() {
+        return postData != null ? new String(postData, StandardCharsets.UTF_8) : "null";
     }
 
 }

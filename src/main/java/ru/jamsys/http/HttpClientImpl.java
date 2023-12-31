@@ -1,17 +1,21 @@
 package ru.jamsys.http;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import ru.jamsys.virtual.file.system.view.FileViewKeyStore;
+import lombok.ToString;
+import ru.jamsys.virtual.file.system.view.FileViewKeyStoreSslSocketFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Data
 public class HttpClientImpl implements HttpClient {
 
     @Getter
@@ -32,11 +36,7 @@ public class HttpClientImpl implements HttpClient {
 
     @Getter
     @Setter
-    public boolean checkServerTrusted = false;
-
-    @Getter
-    @Setter
-    public boolean disableHostnameVerification = false;
+    public boolean disableHostnameVerification = true;
 
     @Getter
     @Setter
@@ -46,11 +46,11 @@ public class HttpClientImpl implements HttpClient {
     @Getter
     private Map<String, List<String>> headerResponse = null;
 
-    @Setter
-    private FileViewKeyStore keyStore = null;
+    private FileViewKeyStoreSslSocketFactory socketFactory;
 
     @Getter
     @Setter
+    @ToString.Exclude
     private byte[] postData = null;
 
     @Getter
@@ -58,6 +58,7 @@ public class HttpClientImpl implements HttpClient {
     private String url = null;
 
     @Getter
+    @ToString.Exclude
     private byte[] response = null;
 
     @Getter
@@ -106,7 +107,9 @@ public class HttpClientImpl implements HttpClient {
             InputStream inputStream = getResult(httpURLConnection);
             status = httpURLConnection.getResponseCode();
             response = read(inputStream);
-            inputStream.close();
+            if (inputStream != null) {
+                inputStream.close();
+            }
         } catch (Exception e) {
             exception = e;
             e.printStackTrace();
@@ -123,28 +126,27 @@ public class HttpClientImpl implements HttpClient {
     }
 
     private void configureSsl(HttpsURLConnection httpsURLConnection) {
-        SSLSocketFactory sslSocketFactory = null;
-        if (keyStore != null) {
-            sslSocketFactory = keyStore.getSslSocketFactory(SslContextType);
-        }
-        if (sslSocketFactory == null) { //Если хранилище из файла не загрузилось, то может вернуть null
-            sslSocketFactory = SslSocketFactoryCache.getSslSocketFactory(SslContextType);
-        }
-        httpsURLConnection.setSSLSocketFactory(sslSocketFactory);
-        if (disableHostnameVerification || !checkServerTrusted) {
-            httpsURLConnection.setHostnameVerifier(TrustManager.getHostnameVerifier());
+        SSLSocketFactory sslSocketFactory;
+        if (socketFactory != null) {
+            sslSocketFactory = socketFactory.getSslSocketFactory(SslContextType);
+            httpsURLConnection.setSSLSocketFactory(sslSocketFactory);
+            if (disableHostnameVerification) {
+                httpsURLConnection.setHostnameVerifier(socketFactory.getTrustManager().getHostnameVerifier());
+            }
         }
     }
 
     private static byte[] read(InputStream inputStream) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        while (true) {
-            int data = inputStream.read(buf);
-            if (data <= 0) {
-                break;
+        if (inputStream != null) {
+            byte[] buf = new byte[1024];
+            while (true) {
+                int data = inputStream.read(buf);
+                if (data <= 0) {
+                    break;
+                }
+                out.write(buf, 0, data);
             }
-            out.write(buf, 0, data);
         }
         return out.toByteArray();
     }
@@ -152,6 +154,23 @@ public class HttpClientImpl implements HttpClient {
     @SuppressWarnings("unused")
     public String getResponseString(String charset) throws UnsupportedEncodingException {
         return new String(response, charset);
+    }
+
+    @Override
+    public void setKeyStore(ru.jamsys.virtual.file.system.File keyStore, Object... props) throws Exception {
+        socketFactory = keyStore.getView(FileViewKeyStoreSslSocketFactory.class, props);
+    }
+
+    @SuppressWarnings("unused")
+    @ToString.Include()
+    public String getResponseString() {
+        return response != null ? new String(response, StandardCharsets.UTF_8) : "null";
+    }
+
+    @SuppressWarnings("unused")
+    @ToString.Include()
+    public String getPostDataString() {
+        return postData != null ? new String(postData, StandardCharsets.UTF_8) : "null";
     }
 
 }

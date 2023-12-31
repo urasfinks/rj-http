@@ -2,7 +2,7 @@ package ru.jamsys.http;
 
 
 import ru.jamsys.UtilBase64;
-import ru.jamsys.virtual.file.system.view.FileViewKeyStore;
+import ru.jamsys.virtual.file.system.File;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -37,12 +37,6 @@ public interface HttpClient {
     void setReadTimeoutMillis(int readTimeoutMillis);
 
     @SuppressWarnings("unused")
-    boolean isCheckServerTrusted();
-
-    @SuppressWarnings("unused")
-    void setCheckServerTrusted(boolean checkServerTrusted);
-
-    @SuppressWarnings("unused")
     boolean isDisableHostnameVerification();
 
     @SuppressWarnings("unused")
@@ -58,7 +52,7 @@ public interface HttpClient {
     Map<String, List<String>> getHeaderResponse();
 
     @SuppressWarnings("unused")
-    void setKeyStore(FileViewKeyStore keyStore);
+    void setKeyStore(File keyStore, Object... props) throws Exception;
 
     @SuppressWarnings("unused")
     byte[] getPostData();
