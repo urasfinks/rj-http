@@ -25,12 +25,19 @@ public class AppTest {
         security.init("12345".toCharArray());
 
         VirtualFileSystem virtualFileSystem = App.context.getBean(VirtualFileSystem.class);
-        virtualFileSystem.add(new File("/apple.p12", FileLoaderFactory.fromFileSystem("myTodo.notification.development.p12")));
+        virtualFileSystem.add(new File("/apple.p12", FileLoaderFactory.fromFileSystem("security/myTodo.notification.development.p12")));
         File appleCert = virtualFileSystem.get("/apple.p12");
 
         HttpClient httpClientNew = new HttpClientNewImpl();
-        httpClientNew.setUrl("https://api.sandbox.push.apple.com/3/device/e49170c11ed49af3845ab10a2db6dfcff55b28d4c51384410275887dda7d0592");
-        httpClientNew.setPostData("{\"aps\":{\"alert\":\"Hello\"}}".getBytes());
+        httpClientNew.setUrl("https://api.sandbox.push.apple.com/3/device/e81156eeb16246fd0498c53f55f870dfc5892806dde0a6e073cbf586e761382c");
+        httpClientNew.setPostData("""
+                {
+                    "aps": {
+                         "alert": "You got the new message"
+                    },
+                   "message" : "{\\"x1\\":1}"
+                }
+                """.getBytes());
 
         httpClientNew.setRequestHeader("apns-push-type", "alert");
         httpClientNew.setRequestHeader("apns-expiration", "0");
